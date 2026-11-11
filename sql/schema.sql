@@ -1,7 +1,7 @@
 
 -- ============================================================
 -- GAME ANALYTICS: UNLOCKING TENNIS DATA WITH SPORTRADAR
--- MEMBER 2: DATABASE DESIGN AND SQL ANALYSIS
+-- DATABASE DESIGN AND SQL ANALYSIS
 -- DATABASE: PostgreSQL
 -- ============================================================
 
