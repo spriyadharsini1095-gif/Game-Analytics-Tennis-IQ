@@ -77,7 +77,7 @@ rankings["movement"] = rankings["movement"].fillna(0).astype(int)
 st.sidebar.title("Tennis Analytics")
 page = st.sidebar.radio("Go to", [
     "Overview", "Competitors", "Country Analysis",
-    "Leaderboards", "Competitions", "Venues"])
+    "Leaderboards", "Competitions", "Venues","SQL Insights"])
 
 # ================= 1. OVERVIEW =================
 if page == "Overview":
@@ -260,3 +260,48 @@ elif page == "Venues":
         WHERE v.country_name = :c
         ORDER BY v.venue_name
     """, {"c": sel}), hide_index=True, use_container_width=True)
+    # ================= 7. SQL INSIGHTS =================
+elif page == "SQL Insights":
+    st.title("SQL Analysis")
+    st.caption("Queries written by the team, run live on the database")
+
+    QUERIES = {
+        "Competitions by gender": """
+            SELECT gender, COUNT(*) AS total_competitions
+            FROM competitions GROUP BY gender ORDER BY total_competitions DESC""",
+        "Competitions by type": """
+            SELECT type, COUNT(*) AS total_competitions
+            FROM competitions GROUP BY type ORDER BY total_competitions DESC""",
+        "Parent and sub-competitions": """
+            SELECT parent.competition_name AS parent_competition,
+                   child.competition_name  AS sub_competition
+            FROM competitions child
+            JOIN competitions parent ON child.parent_id = parent.competition_id
+            ORDER BY parent.competition_name""",
+        "Top 10 countries by venue count": """
+            SELECT country_name, COUNT(*) AS total_venues
+            FROM venues GROUP BY country_name
+            ORDER BY total_venues DESC LIMIT 10""",
+        "Ranking movement distribution": """
+            SELECT CASE WHEN movement > 0 THEN 'Moved up'
+                        WHEN movement < 0 THEN 'Moved down'
+                        ELSE 'No movement' END AS movement_status,
+                   COUNT(*) AS total_competitors
+            FROM competitor_rankings GROUP BY movement_status
+            ORDER BY total_competitors DESC""",
+        "Top 5 competitors in each gender": """
+            SELECT gender, player_name, country, points, player_rank
+            FROM (SELECT cr.gender, c.name AS player_name, c.country, cr.points,
+                         cr.rank AS player_rank,
+                         RANK() OVER (PARTITION BY cr.gender ORDER BY cr.points DESC) AS pos
+                  FROM competitor c
+                  JOIN competitor_rankings cr ON c.competitor_id = cr.competitor_id) t
+            WHERE pos <= 5 ORDER BY gender, pos, player_name""",
+    }
+
+    choice = st.selectbox("Choose an analysis", list(QUERIES.keys()))
+    result = run(QUERIES[choice])
+    st.dataframe(result, hide_index=True, width="stretch")
+
+    with st.expander("Show the SQL"):
+        st.code(QUERIES[choice].strip(), language="sql")
