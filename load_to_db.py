@@ -14,6 +14,8 @@ conn = psycopg2.connect(
     sslmode=os.getenv("DB_SSLMODE", "prefer"),
     connect_timeout=30, keepalives=1, keepalives_idle=30)
 cur = conn.cursor()
+cur.execute("""TRUNCATE competitor_rankings, competitor, venues,
+               complexes, competitions, categories RESTART IDENTITY CASCADE""")
 
 def clean(v):
     """Turn pandas values into plain Python values (NaN -> None, 3.0 -> 3)."""
@@ -27,7 +29,7 @@ def clean(v):
 
 def load(table, csv_file, mapping, key=None):
     """mapping = {csv_column: table_column}"""
-    df = pd.read_csv(os.path.join("data", csv_file))
+    df = pd.read_csv(os.path.join("data", "clean", csv_file))
     df = df.rename(columns=mapping)[list(mapping.values())]
     if key:
         df = df.drop_duplicates(subset=[key])

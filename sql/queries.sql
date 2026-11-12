@@ -14,7 +14,12 @@ AND table_name IN (
     'competitor_rankings'
 )
 ORDER BY table_name;
-
+-- ============================================================
+-- After cleaning, missing country codes are stored as 'NEU'
+-- ============================================================
+SELECT COUNT(*) AS missing_country_codes
+FROM competitor
+WHERE country_code IS NULL OR TRIM(country_code) IN ('', 'NEU');
 
 -- ============================================================
 --  VERIFY FOREIGN KEY RELATIONSHIPS
